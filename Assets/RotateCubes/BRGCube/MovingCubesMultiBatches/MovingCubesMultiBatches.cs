@@ -53,12 +53,6 @@ namespace RotateCubes.BRGCube.MovingCubesMultiBatches
             public int InstanceOffset;
             public int InstanceCount;
         }
-        
-        private struct SrpBatchDrawCommand
-        {
-            public int VisibleOffset;
-            public int VisibleCount;
-        }
 
         public int instanceCount;
         public float rotateSpeed;
@@ -94,8 +88,6 @@ namespace RotateCubes.BRGCube.MovingCubesMultiBatches
 
         private float3 _rootPos;
         private float _startTime;
-
-        private JobHandle _uploadInstanceDataHandle;
         
         private void Start()
         {
@@ -428,8 +420,7 @@ namespace RotateCubes.BRGCube.MovingCubesMultiBatches
                 }.Schedule(updateInstanceDataJobHandle));
             }
             
-            _uploadInstanceDataHandle = JobHandle.CombineDependencies(handles);
-            _uploadInstanceDataHandle.Complete();
+            JobHandle.CombineDependencies(handles).Complete();
             
             foreach (var pair in _instanceDataPerDrawKey)
             {
@@ -686,7 +677,7 @@ namespace RotateCubes.BRGCube.MovingCubesMultiBatches
                 
                     VisibleInstances = drawCommands.visibleInstances,
                     DrawCommands = batchDrawCommands.AsParallelWriter(),
-                }.ScheduleParallel(batchIds.Length, 32, _uploadInstanceDataHandle);
+                }.ScheduleParallel(batchIds.Length, 32, new JobHandle());
                 
                 // for (int i = 0; i < batchIds.Length; i++)
                 // {
